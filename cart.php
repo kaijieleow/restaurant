@@ -57,6 +57,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['qty_id'], $_POST['qty
             $_SESSION['cart'] = array_values($_SESSION['cart']);
         }
     }
+    // For quantity changes, redirect to avoid resubmission
     header("Location: cart.php");
     exit();
 }
@@ -67,27 +68,39 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['remove_id'])) {
     $_SESSION['cart'] = array_values(array_filter($_SESSION['cart'], function($id) use ($remove_id) {
         return $id != $remove_id;
     }));
+    // For removal, redirect to avoid resubmission
     header("Location: cart.php");
     exit();
 }
 
+// Handle Place Order via AJAX
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['place_order'])) {
-    $_SESSION['cart'] = []; // clear cart
-    $_SESSION['order_placed'] = true;
-    header("Location: cart.php");
-    exit();
+    // Set content type for JSON response
+    header('Content-Type: application/json');
+    try {
+        $_SESSION['cart'] = []; // clear cart
+        $_SESSION['order_placed'] = true; // Set flag for success message on reload
+        echo json_encode(['success' => true, 'message' => 'Order placed successfully!']);
+        exit; // Exit after sending JSON
+    } catch (Exception $e) {
+        echo json_encode(['success' => false, 'message' => 'Error placing order: ' . $e->getMessage()]);
+        exit;
+    }
 }
 
 // Check if order was just placed (before we potentially unset it)
 $order_just_placed = isset($_SESSION['order_placed']);
 
+// Handle Add to Cart from index.php (AJAX)
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['item_id'])) {
-    // ...add to cart logic...
+    // This block is typically for index.php's add to cart, not cart.php itself
+    // Ensure it only outputs JSON and exits if it's an AJAX request
     if (
         isset($_SERVER['HTTP_X_REQUESTED_WITH']) &&
         strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) === 'xmlhttprequest'
     ) {
-        // Only output JSON and exit for AJAX
+        // This part should ideally be in index.php or a dedicated add_to_cart.php
+        // but if it's being hit here, ensure it returns JSON.
         echo json_encode(['success' => true, 'cartCount' => count($_SESSION['cart'])]);
         exit;
     } else {
@@ -206,6 +219,80 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['item_id'])) {
         .remove-btn:hover {
             background: #c0392b;
         }
+
+        /* Modal/Popup Styles */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.5);
+            display: flex; /* Use flexbox for centering */
+            align-items: center; /* Center vertically */
+            justify-content: center; /* Center horizontally */
+        }
+        .modal-content {
+            background-color: #fefefe;
+            padding: 30px;
+            border: none;
+            border-radius: 15px;
+            width: 400px;
+            max-width: 90%;
+            text-align: center;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+        }
+        .modal h2 {
+            margin-top: 0;
+            color: #333;
+            margin-bottom: 20px;
+        }
+        .modal input[type="text"] {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            font-size: 16px;
+            margin-bottom: 20px;
+            box-sizing: border-box;
+        }
+        .modal input[type="text"]:focus {
+            border-color: #27ae60;
+            outline: none;
+        }
+        .modal-buttons {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+        }
+        .modal-btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            cursor: pointer;
+            min-width: 100px;
+        }
+        .confirm-btn {
+            background: #27ae60;
+            color: white;
+        }
+        .confirm-btn:hover {
+            background: #219a52;
+        }
+        .cancel-btn {
+            background: #95a5a6;
+            color: white;
+        }
+        .cancel-btn:hover {
+            background: #7f8c8d;
+        }
+        .loading {
+            opacity: 0.6;
+            pointer-events: none;
+        }
     </style>
 </head>
 <body>
@@ -229,20 +316,20 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['item_id'])) {
                 $total += $subtotal;
             ?>
             <div class="cart-item">
-                <img src="<?= $item['image'] ?>" alt="<?= htmlspecialchars($item['name']) ?>">
+                <img src="<?= htmlspecialchars($item['image']) ?>" alt="<?= htmlspecialchars($item['name']) ?>">
                 <div class="cart-item-info">
                     <h3><?= htmlspecialchars($item['name']) ?></h3>
                     <p>
                         RM <?= number_format($item['price'], 2) ?> × 
                         <span class="qty-controls">
                             <form method="post" style="display:inline;">
-                                <input type="hidden" name="qty_id" value="<?= $id ?>">
+                                <input type="hidden" name="qty_id" value="<?= htmlspecialchars($id) ?>">
                                 <input type="hidden" name="qty_action" value="minus">
                                 <button type="submit" class="qty-btn"<?= $qty <= 1 ? ' disabled' : '' ?>>-</button>
                             </form>
-                            <span class="qty-value"><?= $qty ?></span>
+                            <span class="qty-value"><?= htmlspecialchars($qty) ?></span>
                             <form method="post" style="display:inline;">
-                                <input type="hidden" name="qty_id" value="<?= $id ?>">
+                                <input type="hidden" name="qty_id" value="<?= htmlspecialchars($id) ?>">
                                 <input type="hidden" name="qty_action" value="plus">
                                 <button type="submit" class="qty-btn">+</button>
                             </form>
@@ -251,7 +338,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['item_id'])) {
                     </p>
                 </div>
                 <form method="post" style="display:inline;">
-                    <input type="hidden" name="remove_id" value="<?= $id ?>">
+                    <input type="hidden" name="remove_id" value="<?= htmlspecialchars($id) ?>">
                     <button type="submit" class="remove-btn">Remove</button>
                 </form>
             </div>
@@ -266,11 +353,149 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['item_id'])) {
     <a href="index.php" class="back-button">← Back to Menu</a>
 
     <?php if (!empty($cart) && !$order_just_placed): ?>
-        <form method="post">
-            <button type="submit" name="place_order" class="place-order-btn">Place Order</button>
-        </form>
+        <button type="button" id="showNameModal" class="place-order-btn">Place Order</button>
     <?php endif; ?>
 </div>
+
+<!-- Name Collection Modal -->
+<div id="nameModal" class="modal">
+    <div class="modal-content">
+        <h2>Enter Your Name</h2>
+        <p>Please provide your name to complete the order:</p>
+        <form id="nameForm">
+            <input type="text" id="customerName" name="name" placeholder="Enter your name" required>
+            <div class="modal-buttons">
+                <button type="button" id="cancelOrder" class="modal-btn cancel-btn">Cancel</button>
+                <button type="submit" id="confirmOrder" class="modal-btn confirm-btn">Confirm Order</button>
+            </div>
+        </form>
+        <div id="orderMessage" style="margin-top: 15px; font-weight: bold;"></div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const modal = document.getElementById('nameModal');
+    const showModalBtn = document.getElementById('showNameModal');
+    const cancelBtn = document.getElementById('cancelOrder');
+    const nameForm = document.getElementById('nameForm');
+    const customerNameInput = document.getElementById('customerName');
+    const orderMessage = document.getElementById('orderMessage');
+
+    // Show modal when Place Order is clicked
+    if (showModalBtn) {
+        showModalBtn.addEventListener('click', function() {
+            modal.style.display = 'flex'; // Use 'flex' to enable centering via flexbox
+            customerNameInput.focus();
+        });
+    }
+
+    // Hide modal when cancel is clicked
+    cancelBtn.addEventListener('click', function() {
+        modal.style.display = 'none';
+        customerNameInput.value = '';
+        orderMessage.innerHTML = '';
+    });
+
+    // Hide modal when clicking outside
+    modal.addEventListener('click', function(e) {
+        if (e.target === modal) {
+            modal.style.display = 'none';
+            customerNameInput.value = '';
+            orderMessage.innerHTML = '';
+        }
+    });
+
+    // Handle form submission
+    nameForm.addEventListener('submit', function(e) {
+        e.preventDefault();
+        
+        const customerName = customerNameInput.value.trim();
+        if (!customerName) {
+            orderMessage.innerHTML = '<span style="color: red;">Please enter your name.</span>';
+            return;
+        }
+
+        // Disable form and show loading
+        const formElements = nameForm.querySelectorAll('input, button');
+        formElements.forEach(el => el.disabled = true);
+        nameForm.classList.add('loading');
+        orderMessage.innerHTML = '<span style="color: blue;">Processing order...</span>';
+
+        // First, submit the name to data.php
+        fetch('data.php', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded',
+                'X-Requested-With': 'XMLHttpRequest' // Important: Identify as AJAX request
+            },
+            body: 'name=' + encodeURIComponent(customerName)
+        })
+        .then(response => {
+            // Check if the response is OK (status 200-299)
+            if (!response.ok) {
+                // If not OK, try to read as text to get the raw error
+                return response.text().then(text => { throw new Error(`HTTP error! status: ${response.status}, response: ${text}`); });
+            }
+            // If OK, parse as JSON
+            return response.json();
+        })
+        .then(data => {
+            if (data.status === 'success') {
+                // Name saved successfully, now place the order by sending a request to cart.php
+                // This request to cart.php will now also return JSON
+                return fetch('cart.php', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded',
+                        'X-Requested-With': 'XMLHttpRequest' // Important: Identify as AJAX request
+                    },
+                    body: 'place_order=1'
+                });
+            } else {
+                // If data.php returned an error status in JSON
+                throw new Error(data.message || 'Failed to save customer name');
+            }
+        })
+        .then(response => {
+            // This is the response from cart.php for 'place_order'
+            if (!response.ok) {
+                return response.text().then(text => { throw new Error(`HTTP error! status: ${response.status}, response: ${text}`); });
+            }
+            return response.json(); // Expect JSON from cart.php now
+        })
+        .then(data => {
+            if (data.success) {
+                // Order placed successfully (cart cleared on server)
+                orderMessage.innerHTML = '<span style="color: green;">Order placed successfully!</span>';
+                // Reload the page after a short delay to show the "Order Successful" message
+                setTimeout(() => {
+                    window.location.reload();
+                }, 1500);
+            } else {
+                // If cart.php returned an error status in JSON
+                throw new Error(data.message || 'Failed to place order');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            orderMessage.innerHTML = '<span style="color: red;">Error: ' + error.message + '</span>';
+            
+            // Re-enable form elements
+            formElements.forEach(el => el.disabled = false);
+            nameForm.classList.remove('loading');
+        });
+    });
+
+    // Handle Enter key in input field
+    customerNameInput.addEventListener('keypress', function(e) {
+        if (e.key === 'Enter') {
+            e.preventDefault();
+            nameForm.dispatchEvent(new Event('submit'));
+        }
+    });
+});
+</script>
 
 </body>
 </html>
