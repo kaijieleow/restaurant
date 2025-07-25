@@ -1,0 +1,341 @@
+html, body {
+    width: 100%;
+    min-height: 100%;
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    background: #ffffff; /* Use your preferred background */
+}
+
+body {
+    font-family: 'Segoe UI', Arial, sans-serif;
+    background: linear-gradient(to bottom, #ffffff 80%, #fff 100%);
+    margin: 0;
+    padding: 0; /* No side padding */
+    text-align: center;
+}
+
+h1 {
+    color: #d35400;
+}
+
+.tabs {
+    margin: 20px 0;
+    display: flex;
+    justify-content: center;
+    gap: 15px;
+}
+
+.tab-button, .cart-link {
+    text-decoration: none;
+    margin: 10px;
+    padding: 10px 15px;
+    background: #f39c12;
+    color: white;
+    border-radius: 5px;
+}
+
+.tab-button {
+    cursor: pointer;
+    border: none;
+    outline: none;
+    font-size: 16px;
+    margin: 0 5px;
+    padding: 12px 28px;
+    background: #f39c12;
+    color: white;
+    border-radius: 8px;
+    box-shadow: 0 2px 8px rgba(243, 156, 18, 0.15);
+    transition: background 0.2s, color 0.2s, transform 0.15s, box-shadow 0.2s;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+}
+
+.tab-button:hover,
+.tab-button:focus {
+    background: #d35400;
+    color: #fffbe6;
+    transform: translateY(-2px) scale(1.04);
+    box-shadow: 0 4px 16px rgba(211, 84, 0, 0.18);
+}
+
+.tab-button.active {
+    background: #d35400;
+    color: #fffbe6;
+    box-shadow: 0 4px 16px rgba(211, 84, 0, 0.25);
+    transform: scale(1.06);
+}
+
+.header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: #f39c12;
+    padding: 15px 20px;
+    color: rgb(255, 255, 255);
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    transition: transform 0.4s cubic-bezier(.77,0,.18,1);
+    will-change: transform;
+}
+
+.header.hide {
+    transform: translateY(-100%);
+}
+
+.cart-link {
+    background: white;
+    color: #f39c12;
+    font-weight: bold;
+    padding: 8px 12px;
+    border-radius: 20px;
+    position: relative;
+}
+
+.cart-count {
+    background: red;
+    color: white;
+    font-size: 12px;
+    border-radius: 50%;
+    padding: 3px 8px;
+    position: absolute;
+    top: -8px;
+    right: -10px;
+}
+
+.cart-count.bump {
+    animation: bump 0.3s ease;
+}
+
+@keyframes bump {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.2); }
+    100% { transform: scale(1); }
+}
+
+.slider-container {
+    position: relative;
+    width: 100%;
+    min-height: 1400px; /* Adjust as needed */
+    overflow: hidden;
+}
+
+.menu-section {
+    position: absolute;
+    top: 0;
+    left: 100%;
+    width: 100%;
+    opacity: 0;
+    transition: left 0.5s cubic-bezier(.77,0,.18,1), opacity 0.5s;
+    z-index: 1;
+    background: #fffdf6;
+}
+
+.menu-section.active {
+    left: 0;
+    opacity: 1;
+    z-index: 2;
+}
+
+.menu-section:not(.active) {
+    pointer-events: none;
+}
+
+.menu-section {
+    margin-top: 40px;
+    text-align: center;
+}
+
+.menu-section h2 {
+    color: #d35400;
+    margin-bottom: 10px;
+}
+
+.menu-container {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 20px;
+    padding-top: 20px;
+}
+
+.menu-item {
+    background: white;
+    border: 1px solid #eee;
+    border-radius: 12px;
+    width: 45%;
+    max-width: 280px;
+    padding: 15px;
+    box-shadow: 0 3px 8px rgba(0,0,0,0.05);
+    transition: transform 0.2s ease;
+}
+
+.menu-item:hover {
+    transform: scale(1.02);
+}
+
+.menu-item img {
+    width: 100%;
+    height: 180px;
+    object-fit: cover;
+    border-radius: 10px;
+    display: block;
+    background: #fff; /* White background */
+}
+
+.menu-item h3 {
+    margin: 10px 0 5px;
+}
+
+.menu-item p {
+    color: #27ae60;
+    font-weight: bold;
+}
+
+.menu-item button {
+    background: #27ae60;
+    color: white;
+    border: none;
+    padding: 8px 12px;
+    border-radius: 5px;
+    cursor: pointer;
+}
+
+.menu-item button:hover {
+    background: #219150;
+}
+
+.menu-item input[type="number"] {
+    width: 60px;
+    padding: 5px;
+    border-radius: 4px;
+    border: 1px solid #ccc;
+    margin-right: 8px;
+    font-size: 1em;
+}
+
+.menu-item form.add-to-cart-form {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    margin-top: 10px;
+}
+
+.qty-controls {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 0;
+    width: 100%;
+    justify-content: center;
+}
+
+.qty-btn {
+    background: #27ae60;
+    color: #fff;
+    border: none;
+    border-radius: 6px;
+    width: 36px;
+    height: 36px;
+    font-size: 22px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: background 0.2s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+}
+
+.qty-btn:hover {
+    background: #219150;
+}
+
+.menu-item input[type="number"][name="quantity"] {
+    width: 44px;
+    padding: 6px 0;
+    border-radius: 6px;
+    border: 1px solid #ccc;
+    text-align: center;
+    font-size: 1.1em;
+    margin: 0 2px;
+    background: #f9f9f9;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.add-to-cart-btn {
+    width: 100%;
+    background: #27ae60;
+    color: white;
+    border: none;
+    padding: 10px 0;
+    border-radius: 7px;
+    font-size: 1em;
+    font-weight: 600;
+    cursor: pointer;
+    margin-top: 2px;
+    transition: background 0.2s;
+}
+
+.add-to-cart-btn:hover {
+    background: #219150;
+}
+
+.menu {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 20px;
+}
+
+.card {
+    width: 30%;
+}
+
+.banner {
+    width: 100%;
+    height: 600px; /* Reduce this value as needed */
+    overflow: hidden;
+    margin-bottom: 30px;
+}
+
+.banner img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain; /* Show the whole image, do not crop */
+    display: block;
+    background: #000000; /* Optional: set a background color for empty space */
+}
+
+.place-order-btn {
+    display: block;
+    width: 100%;
+    max-width: 320px;
+    margin: 30px auto 0 auto;
+    background: #27ae60;
+    color: white;
+    padding: 18px 0;
+    font-size: 1.3em;
+    font-weight: bold;
+    border: none;
+    border-radius: 10px;
+    cursor: pointer;
+    transition: background 0.2s, transform 0.15s;
+    box-shadow: 0 2px 8px rgba(39, 174, 96, 0.12);
+}
+
+.place-order-btn:hover {
+    background: #219150;
+    transform: scale(1.03);
+}
+
+
+@media (max-width: 600px) {
+    .menu-item {
+        width: 90%;
+    }
+}
